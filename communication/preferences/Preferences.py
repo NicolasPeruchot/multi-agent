@@ -78,7 +78,7 @@ class Preferences:
         """
         scores = [x.get_score(self) for x in item_list]
         scores.sort(reversed=True)
-        ten_percent = scores[len(scores) * 0.1]
+        ten_percent = scores[int(len(scores) * 0.1)]
         return item.get_score(self) > ten_percent
 
 
