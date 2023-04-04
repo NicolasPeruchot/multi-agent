@@ -16,7 +16,8 @@ from communication.preferences.Value import Value
 class ArgumentAgent(CommunicatingAgent):
     def __init__(self, unique_id, model, name, list_items):
         super().__init__(unique_id, model, name)
-        self.preference = self.generate_preferences(list_items)
+        self.list_items = list_items
+        self.preference = self.generate_preferences()
 
     def step(self):
         super().step()
@@ -24,15 +25,15 @@ class ArgumentAgent(CommunicatingAgent):
     def get_preference(self):
         return self.preference
 
-    def generate_preferences(self, List_items):
+    def generate_preferences(self):
         """
         Takes a dictionnary like {Item: {CriterionName: Value}}
         """
         pref = Preferences()
-        for item in List_items.keys():
-            for criterion in List_items[item].keys():
+        for item in self.list_items.keys():
+            for criterion in self.list_items[item].keys():
                 pref.add_criterion_value(
-                    CriterionValue(item, criterion, List_items[item][criterion])
+                    CriterionValue(item, criterion, self.list_items[item][criterion])
                 )
         return pref
 
@@ -110,7 +111,7 @@ class ArgumentModel(Model):
         for proposition in propositions:
             if self.A2.preference.is_item_among_top_10_percent(
                 proposition.get_content(),
-                item_list=self.A1_preferences.keys(),
+                item_list=self.A1.list_items.keys(),
             ):
                 message = Message(
                     "Thomas",
@@ -118,7 +119,38 @@ class ArgumentModel(Model):
                     message_performative=MessagePerformative.ACCEPT,
                     content="Ouais go",
                 )
-            self.A2.send_message(message)
+                self.A2.send_message(message)
+
+                self.A1.send_message(
+                    Message(
+                        "Thomas",
+                        "Nicolas",
+                        message_performative=MessagePerformative.COMMIT,
+                        content="",
+                    )
+                )
+
+                self.A2.send_message(
+                    Message(
+                        "Nicolas",
+                        "Thomas",
+                        message_performative=MessagePerformative.COMMIT,
+                        content="",
+                    )
+                )
+                del self.A1.list_items[proposition.get_content()]
+                self.A1.generate_preferences()
+                del self.A2.list_items[proposition.get_content()]
+                self.A2.generate_preferences()
+            else:
+                message = Message(
+                    "Nicolas",
+                    "Thomas",
+                    message_performative=MessagePerformative.ARGUE,
+                    content="?",
+                )
+
+                self.A1.send_message(message)
         self.schedule.step()
 
 
