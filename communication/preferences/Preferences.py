@@ -77,8 +77,8 @@ class Preferences:
         :return: a boolean, True means that the item is among the favourite ones
         """
         scores = [x.get_score(self) for x in item_list]
-        scores.sort(reversed=True)
-        ten_percent = scores[int(len(scores) * 0.1)]
+        scores.sort()
+        ten_percent = scores[::-1][int(len(scores) * 0.1)]
         return item.get_score(self) > ten_percent
 
 

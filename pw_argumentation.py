@@ -41,17 +41,17 @@ class ArgumentModel(Model):
     def __init__(self):
         self.schedule = RandomActivation(self)
         self.__messages_service = MessageService(self.schedule)
-        diesel_engine = Item("Diesel Engine", "A super cool diesel engine")
-        electric_engine = Item("Electric Engine", "A very quiet engine")
+        self.diesel_engine = Item("Diesel Engine", "A super cool diesel engine")
+        self.electric_engine = Item("Electric Engine", "A very quiet engine")
         A1_preferences = {
-            diesel_engine: {
+            self.diesel_engine: {
                 CriterionName.PRODUCTION_COST: Value.VERY_GOOD,
                 CriterionName.CONSUMPTION: Value.GOOD,
                 CriterionName.DURABILITY: Value.VERY_GOOD,
                 CriterionName.ENVIRONMENT_IMPACT: Value.BAD,
                 CriterionName.NOISE: Value.AVERAGE,
             },
-            electric_engine: {
+            self.electric_engine: {
                 CriterionName.PRODUCTION_COST: Value.AVERAGE,
                 CriterionName.CONSUMPTION: Value.BAD,
                 CriterionName.DURABILITY: Value.GOOD,
@@ -61,14 +61,14 @@ class ArgumentModel(Model):
         }
 
         A2_preferences = {
-            diesel_engine: {
+            self.diesel_engine: {
                 CriterionName.PRODUCTION_COST: Value.GOOD,
                 CriterionName.CONSUMPTION: Value.AVERAGE,
                 CriterionName.DURABILITY: Value.GOOD,
                 CriterionName.ENVIRONMENT_IMPACT: Value.BAD,
                 CriterionName.NOISE: Value.BAD,
             },
-            electric_engine: {
+            self.electric_engine: {
                 CriterionName.PRODUCTION_COST: Value.GOOD,
                 CriterionName.CONSUMPTION: Value.AVERAGE,
                 CriterionName.DURABILITY: Value.AVERAGE,
@@ -98,19 +98,27 @@ class ArgumentModel(Model):
             "Nicolas",
             "Thomas",
             message_performative=MessagePerformative.PROPOSE,
-            content="Chaud ?",
+            content=self.electric_engine,
         )
 
         self.A1.send_message(message)
 
-        message = Message(
-            "Thomas",
-            "Nicolas",
-            message_performative=MessagePerformative.ACCEPT,
-            content="Ouais go",
+        propositions = self.A2.get_messages_from_performative(
+            MessagePerformative.PROPOSE
         )
-        self.A2.send_message(message)
-        self.__messages_service.dispatch_messages()
+
+        for proposition in propositions:
+            if self.A2.preference.is_item_among_top_10_percent(
+                proposition.get_content(),
+                item_list=self.A1_preferences.keys(),
+            ):
+                message = Message(
+                    "Thomas",
+                    "Nicolas",
+                    message_performative=MessagePerformative.ACCEPT,
+                    content="Ouais go",
+                )
+            self.A2.send_message(message)
         self.schedule.step()
 
 
