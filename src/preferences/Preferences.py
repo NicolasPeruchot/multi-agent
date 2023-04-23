@@ -1,8 +1,8 @@
-from src.preferences.Item import Item
+from typing import Dict
+
 from src.preferences.CriterionName import CriterionName
 from src.preferences.CriterionValue import CriterionValue
-
-from typing import Dict
+from src.preferences.Item import Item
 
 
 class Preferences:

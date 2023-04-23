@@ -1,7 +1,7 @@
-from src.preferences.Preferences import Preferences
-from src.preferences.Item import Item
 from src.preferences.CriterionName import CriterionName
 from src.preferences.CriterionValue import CriterionValue
+from src.preferences.Item import Item
+from src.preferences.Preferences import Preferences
 
 
 def test_one():

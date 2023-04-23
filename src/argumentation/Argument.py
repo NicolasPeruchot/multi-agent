@@ -1,11 +1,7 @@
+from typing import Dict, List
+
 from src.agent.ArgumentAgent import ArgumentAgent
-
-
-from src.preferences.CriterionName import CriterionName
-from src.preferences.CriterionValue import CriterionValue
 from src.preferences.Item import Item
-
-from typing import List, Dict
 
 
 class Argument:
@@ -19,7 +15,7 @@ class Argument:
         list_items: List[Item],
         agent: ArgumentAgent,
         last_argument=None,
-        all_arguments=None,
+        all_arguments=[],
     ):
         self.favorable = favorable
         self.item = item
@@ -117,4 +113,4 @@ class Argument:
             return None
 
     def __str__(self) -> str:
-        return f"{self.best[0].get_name()} {self.best[1].name} {self.best[2].name}"
+        return f"{self.get_argument()[0].get_name()} {self.get_argument()[1].name} {self.get_argument()[2].name}"

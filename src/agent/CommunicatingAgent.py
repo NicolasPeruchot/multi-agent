@@ -1,5 +1,4 @@
 from mesa import Agent
-
 from src.communication.Mailbox import Mailbox
 from src.communication.MessageService import MessageService
 

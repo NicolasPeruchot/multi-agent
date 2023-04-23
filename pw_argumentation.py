@@ -1,20 +1,15 @@
+from typing import List
+
 from mesa import Model
 from mesa.time import RandomActivation
-
 from src.agent.ArgumentAgent import ArgumentAgent
-
-from src.communication.MessageService import MessageService
-from src.preferences.Preferences import Preferences
+from src.argumentation.Argument import Argument
 from src.communication.Message import Message
 from src.communication.MessagePerformative import MessagePerformative
-
-from src.argumentation.Argument import Argument
-
+from src.communication.MessageService import MessageService
 from src.preferences.CriterionName import CriterionName
 from src.preferences.CriterionValue import CriterionValue
 from src.preferences.Item import Item
-
-from typing import List
 
 
 class ArgumentModel(Model):

@@ -1,10 +1,10 @@
+from typing import Dict
+
 from src.agent.CommunicatingAgent import CommunicatingAgent
-from src.preferences.Item import Item
 from src.preferences.CriterionName import CriterionName
 from src.preferences.CriterionValue import CriterionValue
+from src.preferences.Item import Item
 from src.preferences.Preferences import Preferences
-
-from typing import Dict
 
 
 class ArgumentAgent(CommunicatingAgent):
