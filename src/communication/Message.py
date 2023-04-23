@@ -18,19 +18,6 @@ class Message:
         self.__content = content
         self.__str__()
 
-    def __str__(self):
-        """Return Message as a String."""
-        return (
-            "From "
-            + str(self.__from_agent)
-            + " to "
-            + str(self.__to_agent)
-            + " ("
-            + str(self.__message_performative)
-            + ") "
-            + str(self.__content)
-        )
-
     def get_exp(self):
         """Return the sender of the message."""
         return self.__from_agent
@@ -48,6 +35,11 @@ class Message:
         return self.__content
 
     def __str__(self):
-        return print(
-            f"{self.get_exp()} to {self.get_dest()}: {self.get_performative()}: {self.get_content()}"
-        )
+        if self.__message_performative.value == 105:
+            return print(
+                f"{self.get_exp()} to {self.get_dest()}: {self.get_performative()}: {self.get_content()[0].get_name()} {self.get_content()[1].name} {self.get_content()[2].name}"
+            )
+        else:
+            return print(
+                f"{self.get_exp()} to {self.get_dest()}: {self.get_performative()}: {self.get_content()}"
+            )

@@ -26,34 +26,34 @@ class ArgumentModel(Model):
         A1_preferences = {
             self.diesel_engine: {
                 CriterionName.PRODUCTION_COST: CriterionValue.VERY_GOOD,
+                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.BAD,
                 CriterionName.CONSUMPTION: CriterionValue.GOOD,
                 CriterionName.DURABILITY: CriterionValue.VERY_GOOD,
-                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.BAD,
                 CriterionName.NOISE: CriterionValue.AVERAGE,
             },
             self.electric_engine: {
                 CriterionName.PRODUCTION_COST: CriterionValue.AVERAGE,
+                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.VERY_GOOD,
                 CriterionName.CONSUMPTION: CriterionValue.BAD,
                 CriterionName.DURABILITY: CriterionValue.GOOD,
-                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.VERY_GOOD,
                 CriterionName.NOISE: CriterionValue.VERY_GOOD,
             },
         }
 
         A2_preferences = {
             self.diesel_engine: {
+                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.BAD,
+                CriterionName.NOISE: CriterionValue.BAD,
                 CriterionName.PRODUCTION_COST: CriterionValue.GOOD,
                 CriterionName.CONSUMPTION: CriterionValue.AVERAGE,
                 CriterionName.DURABILITY: CriterionValue.GOOD,
-                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.BAD,
-                CriterionName.NOISE: CriterionValue.BAD,
             },
             self.electric_engine: {
+                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.VERY_GOOD,
+                CriterionName.NOISE: CriterionValue.VERY_GOOD,
                 CriterionName.PRODUCTION_COST: CriterionValue.GOOD,
                 CriterionName.CONSUMPTION: CriterionValue.AVERAGE,
                 CriterionName.DURABILITY: CriterionValue.AVERAGE,
-                CriterionName.ENVIRONMENT_IMPACT: CriterionValue.VERY_GOOD,
-                CriterionName.NOISE: CriterionValue.VERY_GOOD,
             },
         }
 
@@ -131,16 +131,50 @@ class ArgumentModel(Model):
                 )
                 self.A2.send_message(message)
 
+                debatting = True
+                round = 0
+                agent_names = [self.A1, self.A2]
+
+                argument = Argument(
+                    round % 2 == 0,
+                    item,
+                    [self.diesel_engine, self.electric_engine],
+                    agent_names[round % 2],
+                ).get_argument()
+                while debatting:
+                    message = Message(
+                        agent_names[round % 2].get_name(),
+                        agent_names[(round + 1) % 2].get_name(),
+                        message_performative=MessagePerformative.ARGUE,
+                        content=argument,
+                    )
+                    agent_names[round % 2].send_message(message)
+
+                    argue = (
+                        agent_names[(round + 1) % 2]
+                        .get_messages_from_performative(MessagePerformative.ARGUE)[-1]
+                        .get_content()
+                    )
+
+                    argument = Argument(
+                        True,
+                        item,
+                        [self.diesel_engine, self.electric_engine],
+                        agent_names[(round + 1) % 2],
+                        last_argument=argue,
+                    ).get_argument()
+
+                    if argument == None:
+                        debatting = False
+
+                    round += 1
+
                 message = Message(
-                    "Nicolas",
-                    "Thomas",
-                    message_performative=MessagePerformative.ARGUE,
-                    content=[
-                        item.__str__(),
-                        Argument(True, item, self.A1).__str__(),
-                    ],
+                    agent_names[(round) % 2].get_name(),
+                    agent_names[(round + 1) % 2].get_name(),
+                    message_performative=MessagePerformative.ACCEPT,
+                    content=item,
                 )
-                self.A2.send_message(message)
 
         self.schedule.step()
 

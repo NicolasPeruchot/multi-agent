@@ -1,12 +1,5 @@
-from mesa import Model
-from mesa.time import RandomActivation
-
 from src.agent.ArgumentAgent import ArgumentAgent
 
-from src.communication.MessageService import MessageService
-from src.preferences.Preferences import Preferences
-from src.communication.Message import Message
-from src.communication.MessagePerformative import MessagePerformative
 
 from src.preferences.CriterionName import CriterionName
 from src.preferences.CriterionValue import CriterionValue
@@ -19,33 +12,39 @@ class Argument:
     # Argument class.
     # The class implements an argument used during the interaction.
 
-    def __init__(self, favorable: bool, item: Item, agent: ArgumentAgent):
+    def __init__(
+        self,
+        favorable: bool,
+        item: Item,
+        list_items: List[Item],
+        agent: ArgumentAgent,
+        last_argument=None,
+    ):
         self.favorable = favorable
         self.item = item
-        self.Agent = agent
-        self.preference: Dict[
-            CriterionName, CriterionValue
-        ] = agent.preference.items_with_infos[self.item]
+        self.preference = agent.preference.items_with_infos
         self.proposals = []
+        self.last_argument = last_argument
+        self.list_items = list_items
         self.get_proposal()
-        self.best = self.get_best()
 
     def get_proposal(self):
         if self.favorable == True:
             cond = lambda x: x >= 3
         else:
             cond = lambda x: x < 3
-        for criterion in self.preference:
-            if cond(self.preference[criterion].value):
-                self.proposals.append([criterion, self.preference[criterion]])
+        for criterion in self.preference[self.item]:
+            if cond(self.preference[self.item][criterion].value):
+                self.proposals.append(
+                    [criterion, self.preference[self.item][criterion]]
+                )
         return None
 
-    def display_proposal(self):
-        readable_proposals = [
-            f"{CriterionName(x[0].value).name}: {CriterionValue(x[1].value).name}"
-            for x in self.proposals
-        ]
-        return readable_proposals
+    def get_argument(self):
+        if self.last_argument == None:
+            return self.get_best()
+        else:
+            return self.get_other_item_with_better_value_for_same_criterion()
 
     def get_best(self):
         best_value = -1
@@ -54,7 +53,22 @@ class Argument:
             if x[1].value > best_value:
                 best = x[1].value
                 best = x
-        return best
+        return [self.item, best[0], best[1]]
+
+    def get_other_item_with_better_value_for_same_criterion(self):
+        for item in self.list_items:
+            if item != self.item:
+                if (
+                    self.preference[item][self.last_argument[1]].value
+                    > self.last_argument[2].value
+                ):
+                    return [
+                        item,
+                        self.last_argument[1],
+                        self.preference[item][self.last_argument[1]],
+                    ]
+        else:
+            return None
 
     def __str__(self) -> str:
-        return f"{self.best[0].name} {self.best[1].name}"
+        return f"{self.best[0].get_name()} {self.best[1].name} {self.best[2].name}"
