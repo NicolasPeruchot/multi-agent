@@ -25,10 +25,10 @@ class ArgumentModel(Model):
         self.electric_engine = Item("Electric Engine", "A very quiet engine")
         A1_preferences = {
             self.diesel_engine: {
-                CriterionName.PRODUCTION_COST: CriterionValue.VERY_GOOD,
+                CriterionName.PRODUCTION_COST: CriterionValue.GOOD,
                 CriterionName.ENVIRONMENT_IMPACT: CriterionValue.BAD,
                 CriterionName.CONSUMPTION: CriterionValue.GOOD,
-                CriterionName.DURABILITY: CriterionValue.VERY_GOOD,
+                CriterionName.DURABILITY: CriterionValue.GOOD,
                 CriterionName.NOISE: CriterionValue.AVERAGE,
             },
             self.electric_engine: {
@@ -53,7 +53,7 @@ class ArgumentModel(Model):
                 CriterionName.NOISE: CriterionValue.VERY_GOOD,
                 CriterionName.PRODUCTION_COST: CriterionValue.GOOD,
                 CriterionName.CONSUMPTION: CriterionValue.AVERAGE,
-                CriterionName.DURABILITY: CriterionValue.AVERAGE,
+                CriterionName.DURABILITY: CriterionValue.VERY_GOOD,
             },
         }
 
@@ -132,49 +132,83 @@ class ArgumentModel(Model):
                 self.A2.send_message(message)
 
                 debatting = True
+                favorable = True
                 round = 0
                 agent_names = [self.A1, self.A2]
 
                 argument = Argument(
-                    round % 2 == 0,
+                    favorable,
                     item,
                     [self.diesel_engine, self.electric_engine],
                     agent_names[round % 2],
+                    all_arguments=[],
                 ).get_argument()
-                while debatting:
-                    message = Message(
-                        agent_names[round % 2].get_name(),
-                        agent_names[(round + 1) % 2].get_name(),
-                        message_performative=MessagePerformative.ARGUE,
-                        content=argument,
-                    )
-                    agent_names[round % 2].send_message(message)
 
-                    argue = (
-                        agent_names[(round + 1) % 2]
-                        .get_messages_from_performative(MessagePerformative.ARGUE)[-1]
-                        .get_content()
-                    )
+                if argument == None:
+                    debatting = False
+                else:
+                    all_arguments = [argument]
+                    while debatting:
+                        message = Message(
+                            agent_names[round % 2].get_name(),
+                            agent_names[(round + 1) % 2].get_name(),
+                            message_performative=MessagePerformative.ARGUE,
+                            content=argument,
+                        )
+                        agent_names[round % 2].send_message(message)
 
-                    argument = Argument(
-                        True,
-                        item,
-                        [self.diesel_engine, self.electric_engine],
-                        agent_names[(round + 1) % 2],
-                        last_argument=argue,
-                    ).get_argument()
+                        argue = (
+                            agent_names[(round + 1) % 2]
+                            .get_messages_from_performative(MessagePerformative.ARGUE)[
+                                -1
+                            ]
+                            .get_content()
+                        )
+                        favorable = not favorable
+                        new_argument = Argument(
+                            favorable,
+                            item,
+                            [self.diesel_engine, self.electric_engine],
+                            agent_names[(round + 1) % 2],
+                            last_argument=argue,
+                            all_arguments=all_arguments,
+                        ).get_argument()
 
-                    if argument == None:
-                        debatting = False
-
-                    round += 1
+                        if new_argument == None:
+                            debatting = False
+                            chosen_item = argument[0]
+                        argument = new_argument
+                        all_arguments.append(argument)
+                        round += 1
 
                 message = Message(
                     agent_names[(round) % 2].get_name(),
                     agent_names[(round + 1) % 2].get_name(),
                     message_performative=MessagePerformative.ACCEPT,
-                    content=item,
+                    content=chosen_item,
                 )
+
+                self.A1.send_message(
+                    Message(
+                        agent_names[(round) % 2].get_name(),
+                        agent_names[(round + 1) % 2].get_name(),
+                        message_performative=MessagePerformative.COMMIT,
+                        content=chosen_item,
+                    )
+                )
+
+                self.A2.send_message(
+                    Message(
+                        agent_names[(round + 1) % 2].get_name(),
+                        agent_names[(round) % 2].get_name(),
+                        message_performative=MessagePerformative.COMMIT,
+                        content=chosen_item,
+                    )
+                )
+                del self.A1.items_with_infos[proposition.get_content()]
+                self.A1.generate_preferences()
+                del self.A2.items_with_infos[proposition.get_content()]
+                self.A2.generate_preferences()
 
         self.schedule.step()
 
